@@ -1,20 +1,31 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
-const emit = defineEmits(['closeForm'])
-// Recuperer la nouvelle date clicker depuis le parent
+import { ref, watch } from 'vue'
+
+const emit = defineEmits(['closeForm', 'addEvent'])
 const props = defineProps({
-  newDate: String
+  newDate: String,
+  valModif: Object 
 })
-// La valeur de l'input dans v-model
+
 const addEven = ref("")
-function submitEvent() {
-  if (addEven.value.trim() !== "") {
-    emit("addEvent", addEven.value); 
+
+watch(() => props.valModif, (newVal) => {
+  if (newVal && newVal.event) {
+    addEven.value = newVal.event; 
+  } else {
     addEven.value = ""; 
   }
-}
+}, { immediate: true });
 
+function submitEvent() {
+  if (addEven.value.trim() !== "") {
+    emit("addEvent", {
+      date: props.newDate,
+      event: addEven.value
+    })
+    addEven.value = ""
+  }
+}
 </script>
 
 <template>
@@ -23,18 +34,15 @@ function submitEvent() {
       <div class="form">
         <div class="form-header">
           <h1>Add a new <br> event</h1>
-          <button class="close"  @click="emit('closeForm')">×</button >
+          <button class="close" @click="emit('closeForm')">×</button>
         </div>
-        <h2>{{ props.newDate  }}</h2>
+        <h2>{{ props.newDate }}</h2>
         <label>New event</label>
         <input type="text" v-model="addEven">
         <button class="submit" @click="submitEvent">Submit</button>
       </div>
-
     </div>
   </div>
-
-
 </template>
 
 <style scoped>

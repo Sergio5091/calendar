@@ -1,60 +1,148 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import img from '@/assets/undraw_online-calendar_zaoc.png'
-import TableComponent from '@/components/TableComponent.vue';
-import FormCoponnent from '@/components/FormCoponnent.vue';
-import { ref,reactive } from 'vue'
-// pour afficher le formulaire au click du bouton +New Even
+import { ref, onMounted } from 'vue'
+import Swal from 'sweetalert2' // ⭐ AJOUTE CETTE LIGNE !
+import 'animate.css'
+import TableComponent from '@/components/TableComponent.vue'
+import FormCoponnent from '@/components/FormCoponnent.vue'
 
 const formDisplay = ref(false)
-function newEv() {
-  formDisplay.value = true;
-}
-//fonction pour fermer le formulaire au click du croix
-function closeFor() {
-  formDisplay.value = false;
-}
-// les variable pour afficher le jour dans le formulaire
 const dateEven = ref("Monday")
-function dates(e) {
-  dateEven.value = e
-  console.log("parent", dateEven.value);
-  return dateEven
-}
-  const addEvent = ref();
+const allEvents = ref([])
+const valEdit = ref(null)
+const isEditing = ref(false)
 
-
-function addE(newEvent) {
-  addEvent.value = newEvent;
-
-  return addEvent
-  
-}
-const events = reactive({
-  even:  addEvent,
-  date: dateEven
+onMounted(() => {
+  console.log('événements sauvegardés...')
+  const savedEvents = localStorage.getItem('calendarEvents')
+  if (savedEvents) {
+    allEvents.value = JSON.parse(savedEvents)
+    console.log('Événements chargés :', allEvents.value)
+  } else {
+    console.log('❌ Aucun événement sauvegardé')
+  }
 })
 
+function newEv() {
+  formDisplay.value = true
+  isEditing.value = false
+}
 
+function closeFor() {
+  formDisplay.value = false
+  isEditing.value = false
+  valEdit.value = null
+}
+
+function dates(e) {
+  dateEven.value = e
+}
+
+function addE(eventData) {
+  if (isEditing.value) {
+    const index = allEvents.value.findIndex(event =>
+      event.date === valEdit.value.date &&
+      event.event === valEdit.value.event
+    )
+    if (index !== -1) {
+      allEvents.value[index] = eventData
+    }
+    formDisplay.value = false
+    isEditing.value = false
+
+    Swal.fire({
+      title: 'Modifié ! ✏️',
+      html: `
+        <div style="background: #dcfce7; padding: 10px; border-radius: 8px; margin: 10px 0;">
+          <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 500;">
+            "${eventData.event}" 
+          </p>
+          <p style="margin: 3px 0 0 0; color: #4ade80; font-size: 12px;">
+            Le ${eventData.date}
+          </p>
+        </div>
+      `,
+      icon: 'success',
+      width: 350,
+      padding: '1rem',
+      customClass: {
+        icon: 'xsmall-icon',
+        popup: 'mini-popup'
+      },
+      showConfirmButton: false,
+      timer: 3000,
+      background: '#f0fdf4',
+      color: '#166534'
+    })
+
+  } else {
+    allEvents.value.push(eventData)
+
+    // Notification ajout
+    Swal.fire({
+      title: 'Ajouté ! 🎯',
+      html: `
+        <div style="background: #dcfce7; padding: 10px; border-radius: 8px; margin: 10px 0;">
+          <p style="margin: 0; color: #166534; font-size: 14px; font-weight: 500;">
+            "${eventData.event}" 
+          </p>
+          <p style="margin: 3px 0 0 0; color: #4ade80; font-size: 12px;">
+            Le ${eventData.date}
+          </p>
+        </div>
+      `,
+      icon: 'success',
+      width: 350,
+      padding: '1rem',
+      customClass: {
+        icon: 'xsmall-icon',
+        popup: 'mini-popup'
+      },
+      showConfirmButton: false,
+      timer: 3000,
+      background: '#f0fdf4',
+      color: '#166534'
+    })
+  }
+  saveToLocalStorage()
+}
+
+
+function removeEvent(eventToRemove) {
+  allEvents.value = allEvents.value.filter(event =>
+    event.date !== eventToRemove.date ||
+    event.event !== eventToRemove.event
+  )
+  saveToLocalStorage()
+}
+
+function rempText(eventObj) {
+  valEdit.value = eventObj
+  dateEven.value = eventObj.date
+  formDisplay.value = true
+  isEditing.value = true
+  console.log("Édition de :", eventObj)
+}
+
+function saveToLocalStorage() {
+  console.log('sauvegarder les événements...')
+  localStorage.setItem('calendarEvents', JSON.stringify(allEvents.value))
+  console.log('Sauvegarde réussie !')
+}
 </script>
 
-
 <template>
-
-   
-    <div class="container">
-      <div class="content">
-        <div>
-          <img src="@/assets/undraw_online-calendar_zaoc.png" alt="person" class="person">
-        </div>
-        
-        <FormCoponnent v-if="formDisplay" @closeForm="closeFor" :newDate="dateEven" @addEvent="addE" />
+  <div class="container">
+    <div class="content">
+      <div>
+        <img src="@/assets/undraw_online-calendar_zaoc.png" alt="person" class="person">
       </div>
+      <FormCoponnent v-if="formDisplay" @closeForm="closeFor" :newDate="dateEven" @addEvent="addE"
+        :valModif="valEdit" />
     </div>
-    <TableComponent @display="newEv" @date="dates" :newDate="dateEven"  :addEvent="events"/>
-    
-
+  </div>
+  <TableComponent @display="newEv" @date="dates" :events="allEvents" @editEven="rempText" @removeEvent="removeEvent" />
 </template>
+
 
 <style scoped>
 .content {
@@ -184,5 +272,16 @@ const events = reactive({
 .submit:hover {
   background: #16a34a;
   transform: translateY(-2px);
+}
+
+.xsmall-icon {
+  width: 10px !important;
+  height: 10px !important;
+  font-size: 6px !important;
+}
+
+.mini-popup {
+  padding: 0.8rem !important;
+  border-radius: 12px !important;
 }
 </style>

@@ -1,26 +1,31 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 
-const emit = defineEmits(['display', 'date'])
+const emit = defineEmits(['display', 'date', 'editEven', 'removeEvent'])
 const selectedDay = ref("Monday")
 
 function selectDay(event) {
-  selectedDay.value = event.target.innerText;
+  selectedDay.value = event.target.innerText
   emit('date', selectedDay.value)
 }
-// const tab = ref([
-//   {
-//     title: "Monday",
-//     data: ["text1","text2"]
-//   }
-// ])
+
 const props = defineProps({
-  addEvent: Object
+  events: {
+    type: Array,
+  }
 })
-let obj = ref({})
-obj = props.addEvent
 
+function removeEven(e, eventObj) {
+  e.stopPropagation();
+  emit('removeEvent', eventObj);
+}
 
+function editEven(e, eventObj) {
+  e.stopPropagation();
+  emit('editEven', eventObj);
+}
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 </script>
 
 <template>
@@ -32,28 +37,30 @@ obj = props.addEvent
     <table class="calendar-table">
       <thead>
         <tr>
-          <th @click="selectDay">Monday</th>
-          <th @click="selectDay">Tuesday</th>
-          <th @click="selectDay">Wednesday</th>
-          <th @click="selectDay">Thursday</th>
-          <th @click="selectDay">Friday</th>
-          <th @click="selectDay">Saturday</th>
-          <th @click="selectDay">Sunday</th>
+          <th v-for="day in days" :key="day" @click="selectDay">
+            {{ day }}
+          </th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
+          <td v-for="day in days" :key="day">
+            <div v-for="(el, index) in props.events.filter(ev => ev.date === day)" :key="index" class="event">
+              {{ el.event }}
+              <div class="modif">
+                <div @click="(e) => removeEven(e, el)">
+                  <img src="../assets/trash-solid-full.svg" alt="">
+                </div>
+                <div @click="(e) => editEven(e, el)">
+                  <img src="../assets/pen-solid-full (1).svg" alt="">
+                </div>
+              </div>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
-
 </template>
 
 <style scoped>
@@ -66,6 +73,18 @@ obj = props.addEvent
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
   max-width: 1200px;
   overflow-x: auto;
+}
+
+.modif {
+  display: flex;
+  width: 100%;
+  margin-top: 5px;
+  justify-content: space-between;
+}
+
+img {
+  width: 25px;
+
 }
 
 .header {
@@ -110,6 +129,7 @@ obj = props.addEvent
   padding: 24px;
   vertical-align: top;
   min-width: 140px;
+  cursor: pointer;
 }
 
 .calendar-table th {
@@ -119,11 +139,17 @@ obj = props.addEvent
   color: #111827;
 }
 
+.calendar-table th:hover {
+  background: #e5e7eb;
+}
+
 .event {
   background: #f0fdf4;
   border: 2px solid #86efac;
   border-radius: 10px;
+  text-align: justify;
   padding: 10px;
+  margin: 5px 0;
   text-align: center;
   box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease;
@@ -131,29 +157,5 @@ obj = props.addEvent
 
 .event:hover {
   transform: translateY(-3px);
-}
-
-.event span {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #065f46;
-}
-
-.event .icons {
-  display: flex;
-  justify-content: space-around;
-  font-size: 14px;
-}
-
-.event .icon {
-  cursor: pointer;
-  transition: transform 0.2s, color 0.2s;
-}
-
-.event .icon:hover {
-  transform: scale(1.2);
-  color: #22c55e;
 }
 </style>
