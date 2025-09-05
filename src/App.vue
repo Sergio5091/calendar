@@ -27,8 +27,8 @@ nav {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 18px;
   font-weight: 600;
-  border-bottom-left-radius: 50% 20%;
-  border-bottom-right-radius: 50% 20%;
+  border-bottom-left-radius:  30px;
+  border-bottom-right-radius: 30px;
 }
 
 

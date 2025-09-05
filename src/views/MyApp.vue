@@ -62,6 +62,8 @@ function addE(eventData) {
         </div>
       `,
       icon: 'success',
+            showCancelButton: true,
+
       width: 350,
       padding: '1rem',
       customClass: {

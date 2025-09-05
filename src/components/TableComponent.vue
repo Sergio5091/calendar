@@ -1,5 +1,7 @@
 <script setup>
 import { ref } from 'vue'
+import Swal from 'sweetalert2' // ⭐ AJOUTE CETTE LIGNE !
+
 
 const emit = defineEmits(['display', 'date', 'editEven', 'removeEvent'])
 const selectedDay = ref("Monday")
@@ -15,9 +17,32 @@ const props = defineProps({
   }
 })
 
-function removeEven(e, eventObj) {
+async function removeEven(e, eventObj) {
   e.stopPropagation();
-  emit('removeEvent', eventObj);
+  const result = await Swal.fire({
+    title: 'Es-tu sûr ?',
+    text: `"${eventObj.event}" sera supprimé définitivement`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Oui, supprimer !',
+    cancelButtonText: 'Annuler',
+    background: '#fef2f2',
+    width: 400
+  })
+  
+  if (result.isConfirmed) {
+    emit('removeEvent', eventObj);
+    Swal.fire({
+      title: 'Supprimé ! 🗑️',
+      text: 'Événement supprimé avec succès',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+      background: '#f0fdf4'
+    })
+  }
 }
 
 function editEven(e, eventObj) {
